@@ -136,27 +136,27 @@ on the same image at the same time.
 To initialise, first perform migrations:
 
 ```shell script
-> python simple_django_labeller/manage.py migrate
+> python django-labeller/manage.py migrate
 ```
 
 Now you need to import a labelling schema. Labelling schemes are stored as JSON files. For now, there is
 a special one called `demo` that you can use. Load it into a schema named `default`:
 
 ```shell script
-> python simple_django_labeller/manage.py import_schema default demo
+> python django-labeller/manage.py import_schema default demo
 ```
 
 Then populate the database with the example images in the `images` directory (replace `images` with the path
 of another directory if you wish to use different images):
 
 ```shell script
-> python simple_django_labeller/manage.py populate images
+> python django-labeller/manage.py populate images
 ```
 
 Then run the app:
 
 ```shell script
-> python simple_django_labeller/manage.py runserver
+> python django-labeller/manage.py runserver
 ```
 
 #### Django app with DEXTR assisted labelling
@@ -185,14 +185,14 @@ the default ResNet-101 based U-net trained on Pascal VOC 2012 provided by the de
 Now run the Django application:
 
 ```shell script
-> cd simple_django_labeller
+> cd django-labeller
 > python manage.py runserver
 ```
 
 Now start a celery worker:
 
 ```shell script
-> cd simple_django_labeller
+> cd django-labeller
 > celery -A example_labeller_app worker -l info
 ```
 

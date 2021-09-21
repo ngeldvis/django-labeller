@@ -4,6 +4,7 @@ from image_labelling_tool import models as lt_models
 import django.utils.timezone
 
 # Create your models here.
+
 class ImageWithLabels (models.Model):
     url = models.CharField(max_length=150)
     width = models.IntegerField()

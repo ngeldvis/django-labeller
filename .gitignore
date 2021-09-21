@@ -1,0 +1,8 @@
+env/
+.git/
+build/
+dist/
+migrations/
+__pycache__/
+simple_django_labeller/db.sqlite3
+*.pyc

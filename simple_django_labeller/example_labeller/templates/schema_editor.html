@@ -4,7 +4,7 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <title>UEA Computer Vision - Schema Editor</title>
+        <title>Schema Editor - Django Labelling Tool</title>
 
         {% include "inline/schema_editor_css.html" %}
         {% include "inline/schema_editor_scripts.html" %}
@@ -12,15 +12,14 @@
 
     <body>
 
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url "example_labeller:home" %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Schema editor</li>
+            </ol>
+        </nav>
+
         <div class="container">
-
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url "example_labeller:home" %}">Home</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Schema editor</li>
-                </ol>
-            </nav>
-
 
             <h1>UEA Computer Vision - Labelling Tool example Django App - schema editor</h1>
 

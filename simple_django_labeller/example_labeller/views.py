@@ -1,25 +1,34 @@
 import os, datetime, json, tempfile, zipfile
 import celery.result
+import json
+import urllib.request
 
 from PIL import Image
+from io import BytesIO
 
 from dateutil.tz import tzlocal
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import HttpResponse
+from django.core.files import File
 from django.db import transaction
 from django.db.models import Q
-from django.core.files import File
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from django.conf import settings
 import django.utils.timezone
 
-from image_labelling_tool import labelling_tool
 from image_labelling_tool import models as lt_models
-from image_labelling_tool import labelling_tool_views, schema_editor_views
+from image_labelling_tool import labelling_tool
+from image_labelling_tool import django2coco, handler
+from image_labelling_tool import labelling_tool_views, schema_editor_views, labelled_image
 
 from . import models, tasks, forms
 
+from iris_api.api_writer import BaseAPIWriter
+from iris_api.constants import PHOTOS_URL, PHOTO_ANNOTATIONS_URL
+
+from rich import print
 
 @ensure_csrf_cookie
 def home(request):
@@ -154,13 +163,127 @@ def upload_images(request):
     return redirect('example_labeller:home')
 
 
+@ensure_csrf_cookie
+def upload_images_db(request):
+    
+    # get images using iris api
+    photos_api_writer = BaseAPIWriter(PHOTOS_URL)
+    response = photos_api_writer.get_items()
+    images = json.loads(response.text)['results']
+
+    # create and save image and label models
+    for i in images:
+
+        image_id = i['id']
+        try:
+            models.ImageWithLabels.objects.get(pk=image_id)
+        except models.ImageWithLabels.DoesNotExist:
+            # create labels
+            labels_model = lt_models.Labels(creation_date=datetime.date.today())
+            labels_model.save()
+
+            # create images
+            image_path, _ = urllib.request.urlretrieve(i['image'])
+            image = Image.open(image_path)
+
+            image_model = models.ImageWithLabels(labels=labels_model)
+            image_model.url, image_model.id = i['image'], image_id
+            image_model.width, image_model.height = image.size
+            image_model.save()
+            
+            os.remove(image_path)
+
+    return redirect('example_labeller:home')
 
 
 @ensure_csrf_cookie
+def test_button(request):
+    print('-------------------------------------')
+
+    scheme = lt_models.LabelClass.objects.all()
+    class_labbelling_scheme = {class_.name: class_.id for class_ in scheme}
+
+    print(class_labbelling_scheme)
+
+    ds_info = {
+        "description": "ECOATION GREENHOUSE IMAGE LABEL DATASET",
+        "url": "",
+        "version": "0.0.1",
+        "year": datetime.datetime.now().year,
+        "contributor": "",
+        "date_created": datetime.datetime.now().isoformat(),
+    }
+
+    img = get_object_or_404(models.ImageWithLabels, id=50)
+
+    db_handler = handler.DatabaseHandler([img])
+    labelled_images = db_handler.get_labelled_images()
+
+    # print(labelled_images)
+
+    coco = django2coco.django2coco(labelled_images, class_labbelling_scheme, ds_info)
+
+    print(coco)
+
+    print('-------------------------------------')
+    return redirect('example_labeller:home')
+
+
+def annotate_image(request, image_id):
+
+    # 1. get temporary image file and send api request to get annotations
+    image_annotation_api_writer = BaseAPIWriter(PHOTO_ANNOTATIONS_URL)
+    response = image_annotation_api_writer.get_item(str(image_id))
+    coco_str = json.dumps(json.loads(response.text)['annotation_json'])
+
+    # 2. convert coco format to local json data format
+    scheme = lt_models.LabelClass.objects.all()
+    class_labelling_scheme = {class_.name: class_.id for class_ in scheme}
+
+    labels_json_str = django2coco.coco2django(coco_str, class_labelling_scheme, 'annotations api')
+    labels_json = json.loads(labels_json_str)
+
+    # labels_json_str = '[{"label_type": "polygon", "label_class": "lake", "source": "manual", "anno_data": {}, "regions": [[{"x": 32.40825241055651, "y": 30.7411293971059}, {"x": 32.40825241055651, "y": 179.9083305380065}, {"x": 162.2030897669246, "y": 30.7411293971059}]], "object_id": "e39730fe-9e94-4e93-9782-147fec51304e__2"}]'
+    # labels_json = json.loads(labels_json_str)
+
+    # 3. get image labels to update
+    img = get_object_or_404(models.ImageWithLabels, id=int(image_id))
+    img_labels = img.labels
+
+    # 4. add the new labels to the current images labels
+    cur_labels_json = json.loads(img_labels.labels_json_str)
+    for label in labels_json:
+        cur_labels_json.append(label)
+    
+    # 5. save the labels object
+    img_labels.labels_json_str = json.dumps(cur_labels_json)
+    img_labels.save()
+
+    # 6. make sure to delete temporary file if necessary
+
+    image = get_object_or_404(models.ImageWithLabels, id=int(image_id))
+    print(image.labels)
+
+    return HttpResponse('successful', status=200)
+
+
+@ensure_csrf_cookie
+def gallery(request):
+    context = {
+        'images': [
+            {'url': img.url, 'id': img.id} for img in models.ImageWithLabels.objects.all()
+        ]
+    }
+    return render(request, 'gallery.html', context)
+
+@ensure_csrf_cookie
 def tool(request):
-    image_descriptors = [labelling_tool.image_descriptor(
-            image_id=img.id, url=img.image.url,
-            width=img.image.width, height=img.image.height) for img in models.ImageWithLabels.objects.all()]
+    image_descriptors = [
+        labelling_tool.image_descriptor(
+            image_id=img.id, url=img.url,
+            width=img.width, height=img.height
+        ) for img in models.ImageWithLabels.objects.all()
+    ]
 
     try:
         schema = lt_models.LabellingSchema.objects.get(name='default')
@@ -172,7 +295,7 @@ def tool(request):
     context = {
         'labelling_schema': schema_js,
         'image_descriptors': image_descriptors,
-        'initial_image_index': str(0),
+        'initial_image_id': str(models.ImageWithLabels.objects.all()[0].id) if 'image_id' not in request.GET else request.GET['image_id'],
         'labelling_tool_config': settings.LABELLING_TOOL_CONFIG,
         'tasks': lt_models.LabellingTask.objects.filter(enabled=True).order_by('order_key'),
         'anno_controls': [c.to_json() for c in settings.ANNO_CONTROLS],
@@ -180,10 +303,16 @@ def tool(request):
         'dextr_available': settings.LABELLING_TOOL_DEXTR_AVAILABLE,
         'dextr_polling_interval': settings.LABELLING_TOOL_DEXTR_POLLING_INTERVAL,
     }
+    print(context['initial_image_id'])
     return render(request, 'tool.html', context)
 
 
 class LabellingToolAPI (labelling_tool_views.LabellingToolViewWithLocking):
+
+    def get_image(self, image_id_str, *args, **kwargs):
+        image = get_object_or_404(models.ImageWithLabels, id=int(image_id_str))
+        return image
+
     def get_labels(self, request, image_id_str, *args, **kwargs):
         image = get_object_or_404(models.ImageWithLabels, id=int(image_id_str))
         return image.labels
@@ -209,8 +338,13 @@ class LabellingToolAPI (labelling_tool_views.LabellingToolViewWithLocking):
         """
         if settings.LABELLING_TOOL_DEXTR_AVAILABLE:
             image = get_object_or_404(models.ImageWithLabels, id=int(image_id_str))
-            cel_result = tasks.dextr.delay(image.image.path, dextr_points)
-            dtask = models.DextrTask(image=image, image_id_str=image_id_str, dextr_id=dextr_id, celery_task_id=cel_result.id)
+            cel_result = tasks.dextr.delay(image.url, dextr_points)
+            dtask = models.DextrTask(
+                image=image, 
+                image_id_str=image_id_str, 
+                dextr_id=dextr_id, 
+                celery_task_id=cel_result.id
+            )
             dtask.save()
         return None
 

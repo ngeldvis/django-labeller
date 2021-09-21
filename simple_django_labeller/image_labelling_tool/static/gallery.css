@@ -1,0 +1,51 @@
+.title {
+    margin: 20px 0;
+}
+
+.img-col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 0;
+}
+
+.img-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+    .img-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+img {
+    transition: filter 0.3s ease-out;
+}
+
+img:hover {
+    filter: brightness(80%) grayscale(100);
+}
+
+.buttons {
+    margin-bottom: 20px;
+}
+
+.buttons > a {
+    margin-right: 15px;
+}
+
+.hidden {
+    display: none;
+}
+
+tbody tr:hover {
+    background-color: #eee;
+}
+
+.annotate-btn {
+    text-align: right;
+}

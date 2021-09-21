@@ -1,7 +1,8 @@
-from celery import shared_task
-
 import numpy as np
+import os
+import urllib.request
 
+from celery import shared_task
 from image_labelling_tool import labelling_tool
 
 from django.conf import settings
@@ -13,7 +14,6 @@ def _apply_dextr(image_path, dextr_points_np):
     global _dextr_model
     if settings.LABELLING_TOOL_DEXTR_AVAILABLE or settings.LABELLING_TOOL_DEXTR_WEIGHTS_PATH is not None:
         if _dextr_model is None:
-            import os
             from dextr.model import DextrModel
             import torch
 
@@ -29,14 +29,17 @@ def _apply_dextr(image_path, dextr_points_np):
 
             _dextr_model = dextr_model
 
-        import numpy as np
         from PIL import Image
 
-        im = Image.open(image_path)
+        image_file_path, _ = urllib.request.urlretrieve(image_path)
+        im = Image.open(image_file_path)
 
         mask = _dextr_model.predict([im], dextr_points_np[None, :, :])[0] >= 0.5
         regions = labelling_tool.PolygonLabel.mask_image_to_regions_cv(mask, sort_decreasing_area=True)
         regions_js = labelling_tool.PolygonLabel.regions_to_json(regions)
+
+        os.remove(image_file_path)
+
         return regions_js
     else:
         return None

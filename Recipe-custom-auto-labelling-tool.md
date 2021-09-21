@@ -68,7 +68,7 @@ Lets add it to the constructor:
 ```typescript
 constructor(schema: LabellingSchemaJSON, tasks: TasksJSON[],
                     anno_controls_json: AnnoControlJSON[],
-                    images: ImageModel[], initial_image_index: number,
+                    images: ImageModel[], initial_image_id: number,
                     requestLabelsCallback: any, sendLabelHeaderFn: any,
                     getUnlockedImageIDCallback: any, dextrCallback: any, dextrPollingInterval: number,
                     unetCallback: any, // Our new parameter
@@ -189,7 +189,7 @@ The constructor of the `DjangoLabeller` class is invoked futher down; pass `unet
                  {{ tasks | tojson | safe }}, 
                  {{ anno_controls | tojson | safe }}, 
                  {{ image_descriptors | tojson | safe }}, 
-                 {{ initial_image_index | safe }}, 
+                 {{ initial_image_id | safe }}, 
                  get_labels, 
                  set_labels, 
                  null, 

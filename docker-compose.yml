@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+
+  web:
+    build: .
+    command: python manage.py runserver 8002
+    ports:
+      - 8002:8002
+    volumes:
+      - ./django_labeller:/app
+
+  rabbit:
+    image: rabbitmq:latest
+    ports:
+      - 5672:5672
+
+  celery:
+    build: .
+    command: ['celery', '-A', 'example_labeller_app', 'worker', '-l', 'info']
+    volumes:
+      - ./django_labeller:/app
+
+  celery-beat:
+    build: .
+    command: ['celery', '-A', 'example_labeller_app', 'beat', '-l', 'info']
+    volumes:
+      - ./django_labeller:/app

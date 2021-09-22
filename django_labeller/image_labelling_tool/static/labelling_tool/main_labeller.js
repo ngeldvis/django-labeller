@@ -831,6 +831,9 @@ var labelling_tool;
             // if (initial_image_id < this._images.length) {
             //     this.loadImage(this._images[initial_image_id]);
             // }
+            if (this._image_id_to_index(String(initial_image_id)) == 0 && this._images[0].image_id != initial_image_id) {
+                location.href = '/tool?image_id='+this._images[0].image_id;
+            }
             if (this._image_id_to_index(String(initial_image_id)) < this._images.length) {
                 this.loadImage(this._images[this._image_id_to_index(String(initial_image_id))]);
             }

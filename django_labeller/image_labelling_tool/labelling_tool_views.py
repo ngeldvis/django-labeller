@@ -18,8 +18,6 @@ from iris_api.constants import PHOTO_ANNOTATIONS_URL
 from . import models
 from .django2coco import django2coco, coco2django
 
-from rich import print
-
 
 class LabellingToolView (View):
     """

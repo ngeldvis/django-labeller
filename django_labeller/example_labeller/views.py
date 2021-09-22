@@ -28,8 +28,6 @@ from . import models, tasks, forms
 from iris_api.api_writer import BaseAPIWriter
 from iris_api.constants import PHOTOS_URL, PHOTO_ANNOTATIONS_URL
 
-from rich import print
-
 @ensure_csrf_cookie
 def home(request):
     upload_form = forms.ImageUploadForm()
@@ -165,24 +163,22 @@ def upload_images(request):
 
 @ensure_csrf_cookie
 def upload_images_db(request):
-    
-    # get images using iris api
+
     photos_api_writer = BaseAPIWriter(PHOTOS_URL)
     response = photos_api_writer.get_items()
     images = json.loads(response.text)['results']
 
-    # create and save image and label models
     for i in images:
 
         image_id = i['id']
+        
         try:
             models.ImageWithLabels.objects.get(pk=image_id)
+
         except models.ImageWithLabels.DoesNotExist:
-            # create labels
             labels_model = lt_models.Labels(creation_date=datetime.date.today())
             labels_model.save()
 
-            # create images
             image_path, _ = urllib.request.urlretrieve(i['image'])
             image = Image.open(image_path)
 
@@ -193,39 +189,6 @@ def upload_images_db(request):
             
             os.remove(image_path)
 
-    return redirect('example_labeller:home')
-
-
-@ensure_csrf_cookie
-def test_button(request):
-    print('-------------------------------------')
-
-    scheme = lt_models.LabelClass.objects.all()
-    class_labbelling_scheme = {class_.name: class_.id for class_ in scheme}
-
-    print(class_labbelling_scheme)
-
-    ds_info = {
-        "description": "ECOATION GREENHOUSE IMAGE LABEL DATASET",
-        "url": "",
-        "version": "0.0.1",
-        "year": datetime.datetime.now().year,
-        "contributor": "",
-        "date_created": datetime.datetime.now().isoformat(),
-    }
-
-    img = get_object_or_404(models.ImageWithLabels, id=50)
-
-    db_handler = handler.DatabaseHandler([img])
-    labelled_images = db_handler.get_labelled_images()
-
-    # print(labelled_images)
-
-    coco = django2coco.django2coco(labelled_images, class_labbelling_scheme, ds_info)
-
-    print(coco)
-
-    print('-------------------------------------')
     return redirect('example_labeller:home')
 
 
@@ -262,7 +225,7 @@ def annotate_image(request, image_id):
     # 6. make sure to delete temporary file if necessary
 
     image = get_object_or_404(models.ImageWithLabels, id=int(image_id))
-    print(image.labels)
+    # print(image.labels)
 
     return HttpResponse('successful', status=200)
 
@@ -303,7 +266,6 @@ def tool(request):
         'dextr_available': settings.LABELLING_TOOL_DEXTR_AVAILABLE,
         'dextr_polling_interval': settings.LABELLING_TOOL_DEXTR_POLLING_INTERVAL,
     }
-    print(context['initial_image_id'])
     return render(request, 'tool.html', context)
 
 
@@ -396,3 +358,38 @@ def schema_editor(request):
 class SchemaEditorAPI (schema_editor_views.SchemaEditorView):
     def get_schema(self, request, *args, **kwargs):
         return lt_models.LabellingSchema.objects.get(name='default')
+
+
+@ensure_csrf_cookie
+def test_button(request):
+    print('-------------------------------------')
+
+    print(PHOTO_ANNOTATIONS_URL)
+
+    # scheme = lt_models.LabelClass.objects.all()
+    # class_labbelling_scheme = {class_.name: class_.id for class_ in scheme}
+
+    # print(class_labbelling_scheme)
+
+    # ds_info = {
+    #     "description": "ECOATION GREENHOUSE IMAGE LABEL DATASET",
+    #     "url": "",
+    #     "version": "0.0.1",
+    #     "year": datetime.datetime.now().year,
+    #     "contributor": "",
+    #     "date_created": datetime.datetime.now().isoformat(),
+    # }
+
+    # img = get_object_or_404(models.ImageWithLabels, id=50)
+
+    # db_handler = handler.DatabaseHandler([img])
+    # labelled_images = db_handler.get_labelled_images()
+
+    # # print(labelled_images)
+
+    # coco = django2coco.django2coco(labelled_images, class_labbelling_scheme, ds_info)
+
+    # print(coco)
+
+    print('-------------------------------------')
+    return redirect('example_labeller:home')

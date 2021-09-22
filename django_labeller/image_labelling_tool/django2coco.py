@@ -6,7 +6,6 @@ import pathlib, math
 from datetime import datetime
 from pprint import pprint
 from pycocotools import mask as masktool
-from rich import print
 
 from image_labelling_tool import labelled_image, labelling_tool
 

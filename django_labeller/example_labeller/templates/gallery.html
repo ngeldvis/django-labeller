@@ -44,7 +44,7 @@
                         <td class="pl-2">{{ img.id }}</td>
                         <td><a href="{{ img.url }}">{{ img.url }}</a></td>
                         <td class="text-right">
-                            <a class="btn btn-danger" href="/tool?image_id={{ img.id }}" role="button">Annotate</a>
+                            <a class="btn btn-danger btn-sm" href="/tool?image_id={{ img.id }}" role="button">Annotate</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -63,7 +63,7 @@
         <div id="img-grid" class="img-grid">
             <div class="col img-col">
                 {% for img in images|slice:"0::3" %}
-                <a href="/tool?image_id={{ img.id }}" height="100%">
+                <a href="/tool?image_id={{ img.id }}">
                     <img src="{{ img.url }}" width="100%">
                 </a>
                 {% endfor %}

@@ -5,4 +5,5 @@ dist/
 migrations/
 __pycache__/
 django_labeller/db.sqlite3
+celerybeat-schedule
 *.pyc

@@ -1,4 +1,4 @@
-BASE_URL = 'http://localhost:8000/'
+BASE_URL = 'http://web:8000/'
 
 ROBOTS_URL = BASE_URL + 'api/v1/robots/'
 SENSORS_URL = BASE_URL + 'api/v1/sensors/'

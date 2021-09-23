@@ -219,7 +219,7 @@ LABELLING_TOOL_DEXTR_WEIGHTS_PATH = None
 
 
 
-CELERY_BROKER_URL = 'amqp://guest@localhost//'
+CELERY_BROKER_URL = 'amqp://guest@rabbitmq:5672'
 CELERY_RESULT_BACKEND = 'rpc://'
 
 CELERY_ACCEPT_CONTENT = ['json']

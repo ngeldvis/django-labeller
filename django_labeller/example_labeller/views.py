@@ -225,7 +225,6 @@ def annotate_image(request, image_id):
     # 6. make sure to delete temporary file if necessary
 
     image = get_object_or_404(models.ImageWithLabels, id=int(image_id))
-    # print(image.labels)
 
     return HttpResponse('successful', status=200)
 
@@ -364,7 +363,9 @@ class SchemaEditorAPI (schema_editor_views.SchemaEditorView):
 def test_button(request):
     print('-------------------------------------')
 
-    print(PHOTO_ANNOTATIONS_URL)
+    api_writer = BaseAPIWriter(PHOTOS_URL)
+    response = api_writer.get_items()
+    print(response.text)
 
     # scheme = lt_models.LabelClass.objects.all()
     # class_labbelling_scheme = {class_.name: class_.id for class_ in scheme}

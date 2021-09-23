@@ -2,10 +2,11 @@ numpy>=1.9
 scikit-image>=0.10
 pillow>=2.7
 urllib3==1.26.6
-opencv-python
 Django==3.2.6
 django-labeller==0.3.2
 celery==5.1.2
+dextr==0.1.2
+opencv-python
 pycocotools
 requests
 click

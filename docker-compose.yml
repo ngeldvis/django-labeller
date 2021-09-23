@@ -2,27 +2,37 @@ version: '3'
 
 services:
 
-  web:
+  app:
     build: .
-    command: python manage.py runserver 8002
+    command: python manage.py runserver 0.0.0.0:8002
     ports:
       - 8002:8002
     volumes:
       - ./django_labeller:/app
+    networks:
+      - irislocalapi_api-net
 
-  rabbit:
+  rabbitmq:
     image: rabbitmq:latest
     ports:
       - 5672:5672
 
   celery:
     build: .
-    command: ['celery', '-A', 'example_labeller_app', 'worker', '-l', 'info']
+    command: celery -A example_labeller_app worker -l info
     volumes:
       - ./django_labeller:/app
+    depends_on:
+      - rabbitmq
 
-  celery-beat:
-    build: .
-    command: ['celery', '-A', 'example_labeller_app', 'beat', '-l', 'info']
-    volumes:
-      - ./django_labeller:/app
+  # celery-beat:
+  #   build: .
+  #   command: celery -A example_labeller_app worker -l info
+  #   volumes:
+  #     - ./django_labeller:/app
+  #   depends_on:
+  #     - rabbitmq
+
+networks:
+  irislocalapi_api-net:
+    external: true

@@ -13,8 +13,6 @@ from django.utils.decorators import method_decorator
 from django.conf import settings
 
 from iris_api_client.api import Annotation
-# from iris_api.api_writer import BaseAPIWriter
-# from iris_api.constants import PHOTO_ANNOTATIONS_URL
 
 from . import models
 from .django2coco import django2coco, coco2django
@@ -406,8 +404,6 @@ class LabellingToolViewWithLocking (LabellingToolView):
         labelled_images = db_handler.get_labelled_images()
         coco_json = django2coco(labelled_images, class_labbelling_scheme, ds_info)
 
-        # image_annotation_api_writer = BaseAPIWriter(PHOTO_ANNOTATIONS_URL)
-        # response = image_annotation_api_writer.get_item(int(image_id_str))
         response = Annotation.get(image_id_str)
         annotation_json = json.loads(response.text)
 
@@ -417,7 +413,6 @@ class LabellingToolViewWithLocking (LabellingToolView):
         request_json['annotated_at'] = datetime.datetime.now().isoformat()
         request_json['annotation_json'] = json.loads(coco_json)
 
-        # image_annotation_api_writer.update_item(int(image_id_str), request_json)
         Annotation.update(image_id_str, request_json)
 
         return labels

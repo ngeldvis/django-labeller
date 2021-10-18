@@ -167,8 +167,6 @@ def upload_images(request):
 @ensure_csrf_cookie
 def upload_images_db(request):
 
-    # photos_api_writer = BaseAPIWriter(PHOTOS_URL)
-    # response = photos_api_writer.get_items()
     response = Photo.get_items()
     images = json.loads(response.text)['results']
     pprint(images)
@@ -200,8 +198,6 @@ def upload_images_db(request):
 def annotate_image(request, image_id):
 
     # 1. get temporary image file and send api request to get annotations
-        # image_annotation_api_writer = BaseAPIWriter(PHOTO_ANNOTATIONS_URL)
-        # response = image_annotation_api_writer.get_item(str(image_id))
     response = Annotation.get(image_id)
     coco_str = json.dumps(json.loads(response.text)['annotation_json'])
 

@@ -14,6 +14,10 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import os
 from image_labelling_tool import labelling_tool
 
+import iris_api_client
+
+iris_api_client.start('web:8000')
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -219,7 +223,10 @@ LABELLING_TOOL_DEXTR_WEIGHTS_PATH = None
 
 
 
+# CELERY_BROKER_URL = 'redis://redis:6379/'
+# CELERY_BROKER_URL = 'amqp://guest@localhost//'
 CELERY_BROKER_URL = 'amqp://guest@rabbitmq:5672'
+# CELERY_BROKER_URL= 'pyamqp://rabbitmq:5672'
 CELERY_RESULT_BACKEND = 'rpc://'
 
 CELERY_ACCEPT_CONTENT = ['json']
@@ -227,3 +234,4 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+

@@ -1,3 +1,4 @@
+# Base
 numpy>=1.9
 scikit-image>=0.10
 pillow>=2.7
@@ -7,7 +8,15 @@ django-labeller==0.3.2
 celery==5.1.2
 dextr==0.1.2
 opencv-python
-pycocotools
 requests
+pycocotools
+
+# Iris Api Client
+setuptools 
+setuptools_scm 
+wheel
+
+# Other
+redis
 click
 deprecated

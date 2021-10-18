@@ -123,6 +123,14 @@ var labelling_tool;
                 return null;
             }
         };
+        RootLabelView.prototype.get_current_labels = function () {
+            if (this.model !== null && this.model !== undefined) {
+                return this.model.labels;
+            }
+            else {
+                return null;
+            }
+        };
         ;
         /*
         Notify of colour_scheme change

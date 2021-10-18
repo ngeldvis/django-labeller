@@ -3,6 +3,8 @@ import celery.result
 import json
 import urllib.request
 
+from pprint import pprint
+
 from PIL import Image
 from io import BytesIO
 
@@ -25,8 +27,9 @@ from image_labelling_tool import labelling_tool_views, schema_editor_views, labe
 
 from . import models, tasks, forms
 
-from iris_api.api_writer import BaseAPIWriter
-from iris_api.constants import PHOTOS_URL, PHOTO_ANNOTATIONS_URL
+import iris_api_client
+
+from iris_api_client.api import Photo, Annotation
 
 @ensure_csrf_cookie
 def home(request):
@@ -164,9 +167,11 @@ def upload_images(request):
 @ensure_csrf_cookie
 def upload_images_db(request):
 
-    photos_api_writer = BaseAPIWriter(PHOTOS_URL)
-    response = photos_api_writer.get_items()
+    # photos_api_writer = BaseAPIWriter(PHOTOS_URL)
+    # response = photos_api_writer.get_items()
+    response = Photo.get_items()
     images = json.loads(response.text)['results']
+    pprint(images)
 
     for i in images:
 
@@ -183,7 +188,7 @@ def upload_images_db(request):
             image = Image.open(image_path)
 
             image_model = models.ImageWithLabels(labels=labels_model)
-            image_model.url, image_model.id = i['image'], image_id
+            image_model.url, image_model.id = i['image'].replace('web', 'localhost'), image_id
             image_model.width, image_model.height = image.size
             image_model.save()
             
@@ -195,8 +200,9 @@ def upload_images_db(request):
 def annotate_image(request, image_id):
 
     # 1. get temporary image file and send api request to get annotations
-    image_annotation_api_writer = BaseAPIWriter(PHOTO_ANNOTATIONS_URL)
-    response = image_annotation_api_writer.get_item(str(image_id))
+        # image_annotation_api_writer = BaseAPIWriter(PHOTO_ANNOTATIONS_URL)
+        # response = image_annotation_api_writer.get_item(str(image_id))
+    response = Annotation.get(image_id)
     coco_str = json.dumps(json.loads(response.text)['annotation_json'])
 
     # 2. convert coco format to local json data format
@@ -329,7 +335,8 @@ class LabellingToolAPI (labelling_tool_views.LabellingToolViewWithLocking):
             if res.ready():
                 try:
                     regions = res.get()
-                except:
+                except Exception as e:
+                    print(e)
                     # An error occurred during the DEXTR task; nothing we can do
                     pass
                 else:
@@ -361,36 +368,10 @@ class SchemaEditorAPI (schema_editor_views.SchemaEditorView):
 
 @ensure_csrf_cookie
 def test_button(request):
-    print('-------------------------------------')
+    print('------------------ TESTING ------------------')
 
-    api_writer = BaseAPIWriter(PHOTOS_URL)
-    response = api_writer.get_items()
-    print(response.text)
+    response = Photo.get_items()
+    pprint(response.text)
 
-    # scheme = lt_models.LabelClass.objects.all()
-    # class_labbelling_scheme = {class_.name: class_.id for class_ in scheme}
-
-    # print(class_labbelling_scheme)
-
-    # ds_info = {
-    #     "description": "ECOATION GREENHOUSE IMAGE LABEL DATASET",
-    #     "url": "",
-    #     "version": "0.0.1",
-    #     "year": datetime.datetime.now().year,
-    #     "contributor": "",
-    #     "date_created": datetime.datetime.now().isoformat(),
-    # }
-
-    # img = get_object_or_404(models.ImageWithLabels, id=50)
-
-    # db_handler = handler.DatabaseHandler([img])
-    # labelled_images = db_handler.get_labelled_images()
-
-    # # print(labelled_images)
-
-    # coco = django2coco.django2coco(labelled_images, class_labbelling_scheme, ds_info)
-
-    # print(coco)
-
-    print('-------------------------------------')
+    print('---------------------------------------------')
     return redirect('example_labeller:home')

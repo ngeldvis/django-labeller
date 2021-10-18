@@ -6,3 +6,5 @@ __pycache__/
 django_labeller/db.sqlite3
 celerybeat-schedule
 *.pyc
+.env
+.ssh_key

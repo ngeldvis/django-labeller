@@ -282,10 +282,12 @@ var labelling_tool;
                 this._image_index_input.on('change', function () {
                     var index_str = self._image_index_input.val();
                     var index = parseInt(index_str) - 1;
-                    index = Math.max(Math.min(index, self._images.length - 1), 0);
-                    if (index < self._images.length) {
-                        self.loadImage(self._images[index]);
-                    }
+                    location.href = '/tool?image_id='+(Number(self._images[index].image_id));
+                    
+                    // index = Math.max(Math.min(index, self._images.length - 1), 0);
+                    // if (index < self._images.length) {
+                    //     self.loadImage(self._images[index]);
+                    // }
                 });
                 var prev_image_button = $('#btn_prev_image');
                 prev_image_button.button({
@@ -482,21 +484,25 @@ var labelling_tool;
             // Annotation controls
             //
             this.annotate_btn_form = $('#annotate-btn-form');
-            var annotate_button_alt = $('#grab-annotations-button');
-            annotate_button_alt.click(function (event) {
-                $.ajax({
-                    type: 'GET',
-                    url: '/annotate_image/' + self._get_current_image_id(),
-                    dataType: 'text',
-                    success: function(response) {
-                        console.log(response);
-                        self.loadImage(self._images[self._image_id_to_index(self._get_current_image_id())]);
-                    },
-                    error: function(response) {
-                        console.log(response);
-                    }
-                });
+            var annotate_button = $('#grab-annotations-button');
+            annotate_button.click(function (event) {
                 event.preventDefault();
+                if(self._get_current_labels().length < 1) {
+                    $.ajax({
+                        type: 'GET',
+                        url: '/annotate_image/' + self._get_current_image_id(),
+                        dataType: 'text',
+                        success: function(response) {
+                            console.log(response);
+                            self.loadImage(self._images[self._image_id_to_index(self._get_current_image_id())]);
+                        },
+                        error: function(response) {
+                            console.log(response);
+                        }
+                    });
+                } else {
+                    alert('already labels on the picture')
+                }
             });
             var select_button = $('#select_pick_button');
             select_button.click(function (event) {
@@ -827,10 +833,6 @@ var labelling_tool;
                 DjangoLabeller._global_key_handler_connected = true;
             }
             
-            // Create entities for the pre-existing labels
-            // if (initial_image_id < this._images.length) {
-            //     this.loadImage(this._images[initial_image_id]);
-            // }
             if (this._image_id_to_index(String(initial_image_id)) == 0 && this._images[0].image_id != initial_image_id) {
                 location.href = '/tool?image_id='+this._images[0].image_id;
             }
@@ -900,6 +902,9 @@ var labelling_tool;
         ;
         DjangoLabeller.prototype._get_current_image_id = function () {
             return this.root_view.get_current_image_id();
+        };
+        DjangoLabeller.prototype._get_current_labels = function () {
+            return this.root_view.get_current_labels();
         };
         ;
         DjangoLabeller.prototype.loadImageUrl = function (url) {

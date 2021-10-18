@@ -16,22 +16,20 @@ services:
     image: rabbitmq:latest
     ports:
       - 5672:5672
+    logging:
+      driver: none
+    networks:
+      - irislocalapi_api-net
 
   celery:
     build: .
-    command: celery -A example_labeller_app worker -l info
+    command: ['celery', '-A', 'example_labeller_app', 'worker', '-l', 'info']
     volumes:
       - ./django_labeller:/app
+    networks:
+      - irislocalapi_api-net
     depends_on:
       - rabbitmq
-
-  # celery-beat:
-  #   build: .
-  #   command: celery -A example_labeller_app worker -l info
-  #   volumes:
-  #     - ./django_labeller:/app
-  #   depends_on:
-  #     - rabbitmq
 
 networks:
   irislocalapi_api-net:

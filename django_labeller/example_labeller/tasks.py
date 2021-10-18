@@ -31,7 +31,9 @@ def _apply_dextr(image_path, dextr_points_np):
 
         from PIL import Image
 
-        image_file_path, _ = urllib.request.urlretrieve(image_path)
+        request_image_url = image_path.replace('localhost', 'web')
+
+        image_file_path, _ = urllib.request.urlretrieve(request_image_url)
         im = Image.open(image_file_path)
 
         mask = _dextr_model.predict([im], dextr_points_np[None, :, :])[0] >= 0.5
